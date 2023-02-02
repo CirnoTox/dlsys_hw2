@@ -24,9 +24,18 @@ class SGD(Optimizer):
         self.weight_decay = weight_decay
 
     def step(self):
-        ### BEGIN YOUR SOLUTION
-        raise NotImplementedError()
-        ### END YOUR SOLUTION
+        # BEGIN YOUR SOLUTION
+        mom = self.momentum
+        for w in self.params:
+            if w.grad==None:
+                continue
+            if self.u.get(w) == None:
+                self.u[w] = (1-mom)*(w.grad.data + self.weight_decay*w.data)
+            else:
+                self.u[w] = mom*self.u[w] + \
+                    (1-mom)*(w.grad.data + self.weight_decay*w.data)
+            w.data = w.data + (-self.lr) * self.u[w]
+        # END YOUR SOLUTION
 
 
 class Adam(Optimizer):
@@ -51,6 +60,22 @@ class Adam(Optimizer):
         self.v = {}
 
     def step(self):
-        ### BEGIN YOUR SOLUTION
-        raise NotImplementedError()
-        ### END YOUR SOLUTION
+        # BEGIN YOUR SOLUTION
+        beta1 = self.beta1
+        beta2 = self.beta2
+        weight_decay = self.weight_decay
+        self.t += 1
+        for i, w in enumerate(self.params):
+            if w.grad==None:
+                continue
+            loss_data = w.grad.data + weight_decay*w
+            if self.m.get(i) is None:
+                self.m[i] = ndl.init.zeros(*w.shape)
+            if self.v.get(i) is None:
+                self.v[i] = ndl.init.zeros(*w.shape)
+            self.m[i] = beta1*self.m[i]+(1-beta1)*loss_data
+            self.v[i] = beta2*self.v[i]+(1-beta2)*(loss_data**2)
+            mt = self.m[i]/(1-beta1**self.t)
+            vt = self.v[i]/(1-beta2**self.t)
+            w.data = w.data+(-self.lr*mt/(vt**0.5+self.eps))
+        # END YOUR SOLUTION
